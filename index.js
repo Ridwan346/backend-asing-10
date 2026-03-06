@@ -74,6 +74,17 @@ async function run() {
       EventColl.updateOne({ _id: new ObjectId(id) }, { $set: updatedData })
         .then((result) => res.send(result));
     });
+     //event scerch
+    app.get("/eventsscer", async (req, res) => {
+      const search = req.query.search || "";
+
+      const query = {
+        title: { $regex: search, $options: "i" }
+      };
+
+      const result = await EventColl.find(query).toArray();
+      res.send(result);
+    });
 
     //event participate
     app.post('/events/participate', async (req, res) => {
