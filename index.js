@@ -74,10 +74,12 @@ async function run() {
       EventColl.updateOne({ _id: new ObjectId(id) }, { $set: updatedData })
         .then((result) => res.send(result));
     });
-     //event scerch
+    //event scerch
     app.get("/eventsscer", async (req, res) => {
       const search = req.query.search || "";
-
+      if (!search) {
+        return res.send([]); // কিছুই return করবে না
+      }
       const query = {
         title: { $regex: search, $options: "i" }
       };
