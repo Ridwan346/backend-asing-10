@@ -78,7 +78,7 @@ async function run() {
     app.get("/eventsscer", async (req, res) => {
       const search = req.query.search || "";
       if (!search) {
-        return res.send([]); // কিছুই return করবে না
+        return res.send([]); 
       }
       const query = {
         title: { $regex: search, $options: "i" }
@@ -103,7 +103,7 @@ async function run() {
 
       const result = await EventParticipate
         .find(query)
-        .sort({ date: 1 })   // date অনুযায়ী sort
+        .sort({ date: 1 })   // date  sort
         .toArray();
 
       res.send(result);
