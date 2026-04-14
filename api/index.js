@@ -17,11 +17,16 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+let isConnected = false;
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+   // await client.connect();
+    if (!isConnected) {
+      await client.connect();
+      isConnected = true;
+    }
     const myDB = client.db("userEvent");
     const EventColl = myDB.collection("Event");
     const EventParticipate = myDB.collection('participate')
@@ -87,7 +92,10 @@ async function run() {
       const result = await EventColl.find(query).toArray();
       res.send(result);
     });
-
+      
+    app.get("/", (req, res) => {
+  res.send("API is running ");
+ });
     //event participate
     app.post('/events/participate', async (req, res) => {
       let user = req.body
@@ -118,9 +126,9 @@ async function run() {
 }
 run().catch(console.dir);
 
+module.exports = app;
 
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+//app.listen(port, () => {
+  //console.log(`Example app listening on port ${port}`)
+//})
 //xg3GiMwIckyrSuqi
