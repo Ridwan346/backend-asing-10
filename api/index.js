@@ -2,22 +2,26 @@ const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 
-// Middleware
-app.use(express.json());
-
-// CORS headers - must be set before any routes
+// CORS MUST be the absolute first middleware
 app.use((req, res, next) => {
+    // Set CORS headers on ALL responses
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'false');
     res.header('Access-Control-Max-Age', '86400');
 
-    // Handle preflight
+    // Handle ALL OPTIONS requests immediately - no further processing
     if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
+        console.log('OPTIONS request received for:', req.path);
+        return res.status(200).end();
     }
+
     next();
 });
+
+// Then add other middleware
+app.use(express.json());
 
 const uri = "mongodb+srv://Social-Development:xg3GiMwIckyrSuqi@cluster0.gkum75l.mongodb.net/?appName=Cluster0";
 
@@ -62,6 +66,7 @@ app.post('/events', async (req, res) => {
         let result = await EventColl.insertOne(user);
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -72,6 +77,7 @@ app.get('/events', async (req, res) => {
         const result = await EventColl.find().toArray();
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -83,6 +89,7 @@ app.get('/events/:id', async (req, res) => {
         const result = await EventColl.findOne({ _id: new ObjectId(id) });
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -102,6 +109,7 @@ app.delete("/deleteEvent/:id", async (req, res) => {
         const result = await EventColl.deleteOne({ _id: new ObjectId(id) });
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -113,6 +121,7 @@ app.get("/myEvents/:email", async (req, res) => {
         const events = await EventColl.find({ email }).toArray();
         res.json(events);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -125,6 +134,7 @@ app.put("/updateEvent/:id", async (req, res) => {
         const result = await EventColl.updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -142,6 +152,7 @@ app.get("/events/search", async (req, res) => {
         const result = await EventColl.find(query).toArray();
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -155,6 +166,7 @@ app.post('/events/participate', async (req, res) => {
         let result = await EventParticipate.insertOne(user);
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -169,8 +181,15 @@ app.get("/joinedEvents/:email", async (req, res) => {
             .toArray();
         res.json(result);
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Global error handler with CORS
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
 // Initialize database connection
