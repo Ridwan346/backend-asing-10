@@ -31,7 +31,7 @@ async function run() {
     const EventColl = myDB.collection("Event");
     const EventParticipate = myDB.collection('participate')
 
-    //add or wright databse releted api or code here 
+    //add or write database related api or code here 
     app.post('/events', async (req, res) => {
       let user = req.body
       console.log('new user', user)
@@ -79,8 +79,8 @@ async function run() {
       EventColl.updateOne({ _id: new ObjectId(id) }, { $set: updatedData })
         .then((result) => res.send(result));
     });
-    //event scerch
-    app.get("/eventsscer", async (req, res) => {
+    //event search
+    app.get("/events/search", async (req, res) => {
       const search = req.query.search || "";
       if (!search) {
         return res.send([]); 
@@ -128,7 +128,7 @@ run().catch(console.dir);
 
 module.exports = app;
 
-//app.listen(port, () => {
-  //console.log(`Example app listening on port ${port}`)
-//})
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`)
+})
 //xg3GiMwIckyrSuqi
