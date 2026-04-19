@@ -22,7 +22,7 @@ let isConnected = false;
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-   // await client.connect();
+    // await client.connect();
     if (!isConnected) {
       await client.connect();
       isConnected = true;
@@ -83,7 +83,7 @@ async function run() {
     app.get("/events/search", async (req, res) => {
       const search = req.query.search || "";
       if (!search) {
-        return res.send([]); 
+        return res.send([]);
       }
       const query = {
         title: { $regex: search, $options: "i" }
@@ -92,10 +92,10 @@ async function run() {
       const result = await EventColl.find(query).toArray();
       res.send(result);
     });
-      
+
     app.get("/", (req, res) => {
-  res.send("API is running ");
- });
+      res.send("API is running ");
+    });
     //event participate
     app.post('/events/participate', async (req, res) => {
       let user = req.body
@@ -127,8 +127,3 @@ async function run() {
 run().catch(console.dir);
 
 module.exports = app;
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`)
-})
-//xg3GiMwIckyrSuqi
