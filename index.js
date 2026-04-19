@@ -4,8 +4,24 @@ const cors = require('cors');
 const app = express()
 const port = 5000
 
-app.use(cors())
+// Enhanced CORS configuration for Vercel
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://event-magement-platform.web.app',
+    'https://event-magement-platform.firebaseapp.com'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions))
 app.use(express.json())
+
+// Explicit OPTIONS handler for preflight requests
+app.options('*', cors(corsOptions))
 
 const uri = "mongodb+srv://Social-Development:xg3GiMwIckyrSuqi@cluster0.gkum75l.mongodb.net/?appName=Cluster0";
 
