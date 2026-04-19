@@ -7,6 +7,10 @@ const port = 5000
 app.use(cors())
 app.use(express.json())
 
+app.get("/", (req, res) => {
+  res.send("API is running ");
+});
+
 const uri = "mongodb+srv://Social-Development:xg3GiMwIckyrSuqi@cluster0.gkum75l.mongodb.net/?appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -93,9 +97,6 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/", (req, res) => {
-      res.send("API is running ");
-    });
     //event participate
     app.post('/events/participate', async (req, res) => {
       let user = req.body
