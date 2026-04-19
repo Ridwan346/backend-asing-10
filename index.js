@@ -6,176 +6,177 @@ const port = 5000
 
 // Enhanced CORS configuration for Vercel
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://event-magement-platform.web.app',
-    'https://event-magement-platform.firebaseapp.com'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions))
 app.use(express.json())
 
 // Explicit OPTIONS handler for preflight requests
-app.options('*', cors(corsOptions))
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.sendStatus(200);
+});
 
 const uri = "mongodb+srv://Social-Development:xg3GiMwIckyrSuqi@cluster0.gkum75l.mongodb.net/?appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
 
 let EventColl, EventParticipate;
 let isConnected = false;
 
 async function connectDB() {
-    try {
-        if (!isConnected) {
-            await client.connect();
-            const myDB = client.db("userEvent");
-            EventColl = myDB.collection("Event");
-            EventParticipate = myDB.collection('participate');
-            isConnected = true;
-            await client.db("admin").command({ ping: 1 });
-            console.log("Connected to MongoDB!");
-        }
-    } catch (error) {
-        console.error("MongoDB connection error:", error);
+  try {
+    if (!isConnected) {
+      await client.connect();
+      const myDB = client.db("userEvent");
+      EventColl = myDB.collection("Event");
+      EventParticipate = myDB.collection('participate');
+      isConnected = true;
+      await client.db("admin").command({ ping: 1 });
+      console.log("Connected to MongoDB!");
     }
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+  }
 }
 
 // Root route
 app.get("/", (req, res) => {
-    res.send("API is running");
+  res.send("API is running");
 });
 
 // Events routes
 app.post('/events', async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        let user = req.body;
-        console.log('new event', user);
-        let result = await EventColl.insertOne(user);
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventColl) await connectDB();
+    let user = req.body;
+    console.log('new event', user);
+    let result = await EventColl.insertOne(user);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.get('/events', async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        const result = await EventColl.find().toArray();
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventColl) await connectDB();
+    const result = await EventColl.find().toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.get('/events/:id', async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        const id = req.params.id;
-        const result = await EventColl.findOne({ _id: new ObjectId(id) });
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventColl) await connectDB();
+    const id = req.params.id;
+    const result = await EventColl.findOne({ _id: new ObjectId(id) });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.delete("/deleteEvent/:id", async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        const id = req.params.id;
-        const userEmail = req.body.email;
-        const event = await EventColl.findOne({ _id: new ObjectId(id) });
-        if (!event) return res.status(404).send({ message: "Event not found" });
+  try {
+    if (!EventColl) await connectDB();
+    const id = req.params.id;
+    const userEmail = req.body.email;
+    const event = await EventColl.findOne({ _id: new ObjectId(id) });
+    if (!event) return res.status(404).send({ message: "Event not found" });
 
-        if (event.email !== userEmail) {
-            return res.status(403).send({ message: "Not authorized" });
-        }
-
-        const result = await EventColl.deleteOne({ _id: new ObjectId(id) });
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
+    if (event.email !== userEmail) {
+      return res.status(403).send({ message: "Not authorized" });
     }
+
+    const result = await EventColl.deleteOne({ _id: new ObjectId(id) });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.get("/myEvents/:email", async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        const email = req.params.email;
-        const events = await EventColl.find({ email }).toArray();
-        res.send(events);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventColl) await connectDB();
+    const email = req.params.email;
+    const events = await EventColl.find({ email }).toArray();
+    res.send(events);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.put("/updateEvent/:id", async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        const { id } = req.params;
-        const { _id, email, ...updatedData } = req.body;
-        const result = await EventColl.updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventColl) await connectDB();
+    const { id } = req.params;
+    const { _id, email, ...updatedData } = req.body;
+    const result = await EventColl.updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.get("/events/search", async (req, res) => {
-    try {
-        if (!EventColl) await connectDB();
-        const search = req.query.search || "";
-        if (!search) {
-            return res.send([]);
-        }
-        const query = {
-            title: { $regex: search, $options: "i" }
-        };
-        const result = await EventColl.find(query).toArray();
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
+  try {
+    if (!EventColl) await connectDB();
+    const search = req.query.search || "";
+    if (!search) {
+      return res.send([]);
     }
+    const query = {
+      title: { $regex: search, $options: "i" }
+    };
+    const result = await EventColl.find(query).toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 // Event participation routes
 app.post('/events/participate', async (req, res) => {
-    try {
-        if (!EventParticipate) await connectDB();
-        let user = req.body;
-        console.log('new participation', user);
-        let result = await EventParticipate.insertOne(user);
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventParticipate) await connectDB();
+    let user = req.body;
+    console.log('new participation', user);
+    let result = await EventParticipate.insertOne(user);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 app.get("/joinedEvents/:email", async (req, res) => {
-    try {
-        if (!EventParticipate) await connectDB();
-        const email = req.params.email;
-        const result = await EventParticipate
-            .find({ email: email })
-            .sort({ date: 1 })
-            .toArray();
-        res.send(result);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
+  try {
+    if (!EventParticipate) await connectDB();
+    const email = req.params.email;
+    const result = await EventParticipate
+      .find({ email: email })
+      .sort({ date: 1 })
+      .toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
 });
 
 // Initialize database connection
